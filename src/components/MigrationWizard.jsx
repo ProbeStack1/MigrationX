@@ -11,7 +11,47 @@ import { X, ArrowRight, Loader2, CheckCircle, AlertCircle, Search, ChevronDown }
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+const dummyKeystoreAssessments = [
+  {
+    name: "gateway-keystore",
+    type: "Keystore",
+    status: "warning",
+    issues: [],
+    warnings: [
+      { message: "Certificate gateway-cert expires in 18 months" }
+    ],
+    recommendations: ["Rotate certificate before expiry"]
+  },
+  {
+    name: "internal-keystore",
+    type: "Keystore",
+    status: "ready",
+    issues: [],
+    warnings: [],
+    recommendations: []
+  }
+];
 
+const dummyTruststoreAssessments = [
+  {
+    name: "gateway-truststore",
+    type: "Truststore",
+    status: "warning",
+    issues: [],
+    warnings: [
+      { message: "1 certificate expires in under 2 years" }
+    ],
+    recommendations: ["Update expiring CA certificates"]
+  },
+  {
+    name: "internal-truststore",
+    type: "Truststore",
+    status: "ready",
+    issues: [],
+    warnings: [],
+    recommendations: []
+  }
+];
 const AssessmentTable = ({ title, assessments, type, dependencies, apigeeXData, onMigrate }) => {
   return (
     <div className="bg-white rounded-lg border border-slate-200/50">
@@ -819,6 +859,14 @@ const handleStartMigration = async () => {
                     <div className="text-xl font-bold text-blue-600">{assessmentReport.summary.total_api_products}</div>
                     <div className="text-xs text-slate-500">API Products</div>
                   </div>
+                  <div className="text-center p-3 bg-white rounded border border-slate-200/50">
+                    <div className="text-xl font-bold text-blue-600">{assessmentReport.summary.total_developers || 0}</div>
+                    <div className="text-xs text-slate-500">Developers</div>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded border border-slate-200/50">
+                    <div className="text-xl font-bold text-blue-600">{assessmentReport.summary.total_apps || 0}</div>
+                    <div className="text-xs text-slate-500">Apps</div>
+                  </div>
                 </div>
               </div>
 
@@ -860,6 +908,26 @@ const handleStartMigration = async () => {
                   />
                 )}
 
+                {/* Dummy Keystore Table */}
+<AssessmentTable
+  title="Keystores"
+  assessments={dummyKeystoreAssessments}
+  type="keystore"
+  dependencies={{}}     // no deps needed
+  apigeeXData={{}}      // no data needed
+  onMigrate={() => {}}  // disable migrate
+/>
+
+{/* Dummy Truststore Table */}
+<AssessmentTable
+  title="Truststores"
+  assessments={dummyTruststoreAssessments}
+  type="truststore"
+  dependencies={{}}
+  apigeeXData={{}}
+  onMigrate={() => {}}
+/>
+
                 {/* API Products Assessment */}
                 {assessmentReport.api_product_assessments.length > 0 && (
                   <AssessmentTable 
@@ -871,6 +939,44 @@ const handleStartMigration = async () => {
                     onMigrate={handleResourceMigrate}
                   />
                 )}
+
+                {/* API Products Assessment */}
+{assessmentReport.api_product_assessments.length > 0 && (
+  <AssessmentTable 
+    title="API Products" 
+    assessments={assessmentReport.api_product_assessments}
+    type="api_product"
+    dependencies={assessmentReport.dependencies}
+    apigeeXData={apigeeXData}
+    onMigrate={handleResourceMigrate}
+  />
+)}
+
+{/* 👇 ADD THESE TWO NEW TABLES */}
+
+{/* Developers Assessment */}
+{assessmentReport.developer_assessments && assessmentReport.developer_assessments.length > 0 && (
+  <AssessmentTable 
+    title="Developers" 
+    assessments={assessmentReport.developer_assessments}
+    type="developer"
+    dependencies={assessmentReport.dependencies}
+    apigeeXData={apigeeXData}
+    onMigrate={handleResourceMigrate}
+  />
+)}
+
+{/* Apps Assessment */}
+{assessmentReport.app_assessments && assessmentReport.app_assessments.length > 0 && (
+  <AssessmentTable 
+    title="Developer Apps" 
+    assessments={assessmentReport.app_assessments}
+    type="app"
+    dependencies={assessmentReport.dependencies}
+    apigeeXData={apigeeXData}
+    onMigrate={handleResourceMigrate}
+  />
+)}
                 
               </div>
 
