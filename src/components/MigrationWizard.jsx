@@ -482,15 +482,34 @@ export default function MigrationWizard({ onClose }) {
   const handleDiscovery = async () => {
     setLoading(true);
     try {
-      // Get real Edge data from uploaded files
-      const response = await axios.get(`${API}/discover/real`);
+      // Validate required fields
+      if (!edgeData.orgId || !edgeData.username || !edgeData.env || !edgeData.url || !edgeData.password) {
+        toast.error('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+
+      // Send Edge configuration to backend and discover resources
+      const response = await axios.post(`${API}/discover/real`, {
+        orgId: edgeData.orgId,
+        username: edgeData.username,
+        env: edgeData.env,
+        url: edgeData.url,
+        password: edgeData.password
+      });
+      
       setDiscoveredResources(response.data.resources);
       
-      toast.success('Discovery completed successfully!');
+      if (response.data.config_saved) {
+        toast.success('Edge configuration saved and discovery completed successfully!');
+      } else {
+        toast.success('Discovery completed successfully!');
+      }
       setStep(2);
     } catch (error) {
       console.error('Discovery failed:', error);
-      toast.error('Failed to discover Edge resources');
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to discover Edge resources';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -719,7 +738,7 @@ const handleStartMigration = async () => {
                 </Button>
                 <Button 
                   onClick={handleDiscovery}
-                  disabled={loading || !edgeData.orgId || !edgeData.username}
+                  disabled={loading || !edgeData.orgId || !edgeData.username || !edgeData.env || !edgeData.url || !edgeData.password}
                   className="bg-blue-600 hover:bg-blue-700"
                   data-testid="discovery-btn"
                 >
